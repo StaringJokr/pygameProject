@@ -1,4 +1,7 @@
 import pygame as pg
+from json import load as json_load
+from json import dump as json_dump
+from tkinter import filedialog
 from settings import *
 
 class ObjectManager:
@@ -88,3 +91,86 @@ class Info(pg.Surface):
 
     def get_info(self):
         return {"Swaga": "prisutsvuet"}
+
+
+class SaveManager:
+    def __init__(self):
+        pass
+
+    def load(self, file_path=False):
+        if not file_path:
+            file_path = filedialog.askopenfile()
+        if not file_path: exit()
+
+        self.data = json_load(file_path)
+
+    def save(self, player, c_group, h_group, file_path="save0.json"):
+        if not file_path:
+            file_path = filedialog.askopenfilename()
+            if not file_path:
+                return
+
+        data = {
+                "player": {},
+                "CoinsGroup": {},
+                "HealkasGroup": {},
+                "LootBoxesGroup": {}
+                }
+        pldat = dict()
+        pldat["pos"] = {"x": player.rect.x, "y": player.rect.y}
+        pldat["action"] = player.action
+        pldat["animation"] = player.animation
+        pldat["frame"] = player.frame
+        pldat["direction_r"] = player.direction_r
+        pldat["properties"] = {"speed": player.speed,
+                               "max_hp": player.max_hp,
+                               "hp": player.hp,
+                               "money": player.money,
+                               "max_stamina": player.max_stamina,
+                               "stamina": player.stamina,
+                               "run_boost": player.run_boost,
+                               "restamina_per_second": player.restamina_per_second
+                                }
+        pldat["isHitzone"] = False
+        #if player.hit_zone:
+         #   pldat["isHitzone"] = True
+        data["player"] = pldat
+
+        cgroup = {"x": [], "y": [], "inf": []}
+        for c in c_group:
+            cgroup["x"].append(c.rect.x)
+            cgroup["y"].append(c.rect.y)
+            cgroup["inf"].append(c.inf)
+        data["CoinsGroup"] = cgroup
+
+        hgroup = {"x": [], "y": [], "inf": []}
+        for h in h_group:
+            hgroup["x"].append(h.rect.x)
+            hgroup["y"].append(h.rect.y)
+            hgroup["inf"].append(h.inf)
+        data["HealkasGroup"] = hgroup
+
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json_dump(data, f, ensure_ascii=False, indent=4)
+
+    def player(self, class_name, textures, obj_manager):
+        pl_data = self.data["player"]
+        pos = pl_data["pos"]
+        prop = pl_data["properties"]
+        return class_name((pos["x"], pos["y"]), prop["speed"],
+                          prop["max_hp"], prop["hp"], prop["money"], textures, obj_manager)
+
+    def drops(self, summon_func, drop_type):
+        if drop_type == "coin":
+            c_data = self.data["CoinsGroup"]
+        elif drop_type == "healka":
+            c_data = self.data["HealkasGroup"]
+
+        for i in range(len(c_data.get("x", []))):
+            summon_func(c_data["x"][i], c_data["y"][i], c_data["inf"][i])
+
+    def loot_boxes(self, class_summon, costumes, summon_loot_func, obj_manager, group):
+        l_data = self.data["LootBoxesGroup"]
+
+        for i in range(len(l_data.get("x", []))):
+            class_summon(l_data["x"][i], l_data["y"][i], costumes, summon_loot_func, obj_manager, group)

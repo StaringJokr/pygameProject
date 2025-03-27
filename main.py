@@ -15,28 +15,22 @@ from random import randint as rand
 
 def new_coin(x, y, inf=False):
     global coin_textures, CoinsGroup, objManager
-    if inf:
-        new_c = DroppedItem(x, y, coin_textures,
-                            lambda _: (new_coin(x, y, True), pl1.add_money(1)),
-                            objManager, CoinsGroup)
-    else:
-        new_c = DroppedItem(x, y, coin_textures, lambda x: pl1.add_money(1), objManager, CoinsGroup)
-    CoinsGroup.add(new_c)
+    new_c = DroppedItem(x, y, coin_textures, lambda _: pl1.add_money(1), objManager, CoinsGroup, inf=inf)
     npc1.action = "Attack"
     npc1.frame = 0
     return new_c
 
-def new_healka():
+def new_healka(x, y, inf=False):
     global healka_textures, HealkasGroup
-    new_h = DroppedItem(rand(10, ORIGSCENEW), rand(10, ORIGSCENEH), healka_textures,
-                        lambda x: (new_healka(), pl1.add_hp(5, rand(1, 5) == 5)), objManager, spriteGroup=HealkasGroup)
+    new_h = DroppedItem(x, y, healka_textures,
+                        lambda _: pl1.add_hp(5, rand(1, 5) == 5),
+                        objManager, HealkasGroup, inf=inf)
     #CoinsGroup.add(new_h)
     HealkasGroup.add(new_h)
     return new_h
 
 def choose_obj():
     mpos = pg.mouse.get_pos()
-    print(mpos)
     mpos = (mpos[0] / mnog, mpos[1] / mnog)
     print(mpos, pl1.rect.center)
     for obj in CoinsGroup:
@@ -77,6 +71,8 @@ real_window = pg.display.set_mode([WIDTH, HEIGHT], pg.HWSURFACE | pg.DOUBLEBUF)
 window_surface = pg.Surface([ORIGSCENEW, ORIGSCENEH])  # Creating a surface for converting window resolution for different monitors
 
 clock = pg.time.Clock()
+saver = mc_control.SaveManager()
+saver.load()
 
 bg = pg.image.load(sys.path[0] + "/res/textures/background.png")
 
@@ -119,7 +115,8 @@ for iframe in range(5):
     planims["Attack"].append(pg.transform.scale(sprite, (200, 110)))
 
 
-pl1 = mc_player.Player((60, 60), 400, 100, 75, planims, obj_manager=objManager)
+#pl1 = mc_player.Player((60, 60), 400, 100, 75, planims, obj_manager=objManager)
+pl1 = saver.player(mc_player.Player, planims, obj_manager=objManager)
 npc1 = Entity((32, 280), 400, 200, 120, planims, obj_manager=objManager)
 
 gugugaga = mc_control.Info()
@@ -141,24 +138,31 @@ sprite.blit(pg.image.load(sys.path[0] + f"/res/textures/Barrel16x.png").convert_
 
 AllEntities.add(pl1)
 AllEntities.add(npc1)
-for _ in range(5):
+
+"""for _ in range(5):
     box0 = LootBox(rand(400, ORIGSCENEW - 200), rand(300, ORIGSCENEH - 200), (pg.transform.scale(sprite, (48, 48)),
                           pg.image.load(sys.path[0] + f"/res/textures/chests/gray_chest1.png")), new_coin,
                obj_manager=objManager, spriteGroup=LootBoxesGroup)
     objManager.add(box0)
-    LootBoxesGroup.add(box0)
+    LootBoxesGroup.add(box0)"""
 
 objManager.add_many((pl1, npc1))
+saver.drops(new_coin, drop_type="coin")
+saver.drops(new_healka, drop_type="healka")
+saver.loot_boxes(LootBox, (pg.transform.scale(sprite, (48, 48)),
+                          pg.image.load(sys.path[0] + f"/res/textures/chests/gray_chest1.png")),
+                 new_coin, objManager, LootBoxesGroup)
 
-for _ in range(5):
-    new_healka()
-    new_coin(rand(10, ORIGSCENEW), rand(10, ORIGSCENEH), True)
+#for _ in range(5):
+    #new_healka()
+    #new_coin(rand(10, ORIGSCENEW), rand(10, ORIGSCENEH), True)
 
 
 while True:
     dt = clock.tick(FPS)
 
     keys = pg.key.get_pressed()
+    if keys[pg.K_i]: saver.save(pl1, CoinsGroup, HealkasGroup, False)
 
     for event in pg.event.get():
         if event.type == pg.QUIT:

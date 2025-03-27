@@ -10,7 +10,7 @@ class Player(pg.sprite.Sprite):
         speed o_o
         filename  - path to texture of player
     """
-    def __init__(self, start_pos: tuple, speed: int, max_hp: int, hp: int, animations, obj_manager):
+    def __init__(self, start_pos: tuple, speed: int, max_hp: int, hp: int, money: int, animations, obj_manager):
         pg.sprite.Sprite.__init__(self)
 
         self.obj_manager = obj_manager
@@ -42,7 +42,7 @@ class Player(pg.sprite.Sprite):
 
         self.health_bar = ProgressBar(self, (0, -10), (100, 15), int(hp / max_hp * 100), RED, GREEN)
 
-        self.money = 0
+        self.money = money
 
         self.direction_r = True
 

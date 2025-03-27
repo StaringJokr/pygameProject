@@ -6,7 +6,7 @@ from settings import *
 
 
 class DroppedItem(pg.sprite.Sprite):
-    def __init__(self, x, y, costumes, func_when_die, obj_manager, spriteGroup):
+    def __init__(self, x, y, costumes, func_when_die, obj_manager, spriteGroup, inf):
         pg.sprite.Sprite.__init__(self)
         self.costumes = costumes
         self.image = self.costumes[0]
@@ -19,10 +19,12 @@ class DroppedItem(pg.sprite.Sprite):
 
         self.obj_manager = obj_manager.new_obj(self)
         self.spriteGroup = spriteGroup
+        spriteGroup.add(self)
 
         self.interact_zone = InteractiveBox(self, self.rect.center, 50, 50, (pg.K_e, pg.K_q), (pg.K_e,))
         self.interact_widget = None
         self.func_when_die = func_when_die
+        self.inf = inf
 
     def update(self, **kwargs):
         if not self.isOneFrame:
@@ -47,10 +49,12 @@ class DroppedItem(pg.sprite.Sprite):
 
     def interact(self, player: Player, keys):
         self.func_when_die(self)
-        self.obj_manager.log(f"{type(player).__name__}{player.rect} interacted {type(self).__name__}{self.rect}", False, True)
-        self.obj_manager.remove(self)
-        self.spriteGroup.remove(self)
-        self.kill()
+        self.obj_manager.log(f"{type(player).__name__}{player.rect} interacted {type(self).__name__}{self.rect}",
+                             False, True)
+        if not self.inf:
+            self.obj_manager.remove(self)
+            self.spriteGroup.remove(self)
+            self.kill()
 
     def when_player_in_zone(self, player: Player):
         if self.interact_widget:
@@ -195,7 +199,9 @@ class LootBox(pg.sprite.Sprite):
         self.rect.center = (x, y)
 
         self.obj_manager = obj_manager
+        obj_manager.add(self)
         self.spriteGroup = spriteGroup
+        spriteGroup.add(self)
 
         self.new_loot_func = new_loot_func
 

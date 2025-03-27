@@ -1,0 +1,43 @@
+{
+  "player":
+    {
+      "pos":
+      {
+        "x": 300,
+        "y": 300
+      },
+      "action" : "Nothing",
+      "animation": "<Idle",
+      "frame": 0,
+      "direction_r": true,
+      "properties":
+      {
+        "speed": 400,
+        "max_hp": 100,
+        "hp": 75,
+        "money": 4,
+        "max_stamina": 30.0,
+        "stamina": 15.0,
+        "run_boost": 1.6,
+        "restamina_per_second": 8
+      },
+      "isHitzone": false
+    },
+  "CoinsGroup":
+  {
+    "x": [20, 50],
+    "y": [40, 70],
+    "inf": [true, false]
+  },
+  "HealkasGroup":
+  {
+    "x": [200, 50],
+    "y": [400, 70],
+    "inf": [true, false]
+  },
+  "LootBoxesGroup":
+  {
+    "x": [500, 504],
+    "y": [530, 200]
+  }
+}
