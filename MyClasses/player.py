@@ -10,7 +10,7 @@ class Player(pg.sprite.Sprite):
         speed o_o
         filename  - path to texture of player
     """
-    def __init__(self, start_pos: tuple, speed: int, max_hp, hp,  animations, obj_manager):
+    def __init__(self, start_pos: tuple, speed: int, max_hp: int, hp: int, animations, obj_manager):
         pg.sprite.Sprite.__init__(self)
 
         self.obj_manager = obj_manager
@@ -75,10 +75,13 @@ class Player(pg.sprite.Sprite):
 
     def animate(self, dt):
         if self.action == "Attack":
-            if (self.frame <= 0.4 or not self.hit_zone) and self.frame >= 0.1:
+            if not self.hit_zone and 0.2 >= self.frame >= 0.1:
                 self.start_attacking()
             if self.hit_zone: self.hit_zone.check_collide()
         self.frame += dt
+
+        if self.frame / self.frame_delay * 2 >= len(self.animations[self.action_to_animation[self.action]]) and self.action == "Attack":
+            self.stop_attacking()
 
         if self.frame / self.frame_delay >= len(self.animations[self.action_to_animation[self.action]]):
             if self.action == "Attack":

@@ -32,8 +32,12 @@ class ObjectManager:
         if saveToFile:  self.logs.append(str(round(pg.time.get_ticks() / 1000, 3)) + " " + message + "\n")
 
     def stop_game(self):
-        with open(self.logfile_name, "w") as file:
+        with open(self.logfile_name, "w", encoding="utf-8") as file:
             file.writelines(self.logs)
+
+    def new_obj(self, obj):
+        self.add(obj)
+        return self
 
 
 class Info(pg.Surface):

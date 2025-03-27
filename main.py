@@ -17,19 +17,19 @@ def new_coin(x, y, inf=False):
     global coin_textures, CoinsGroup, objManager
     if inf:
         new_c = DroppedItem(x, y, coin_textures,
-                            lambda x: (new_coin(rand(10, ORIGSCENEW), rand(10, ORIGSCENEH), True), pl1.add_money(1)),
-                            objManager)
+                            lambda _: (new_coin(x, y, True), pl1.add_money(1)),
+                            objManager, CoinsGroup)
     else:
-        new_c = DroppedItem(x, y, coin_textures, lambda x: pl1.add_money(1), objManager)
+        new_c = DroppedItem(x, y, coin_textures, lambda x: pl1.add_money(1), objManager, CoinsGroup)
     CoinsGroup.add(new_c)
     npc1.action = "Attack"
     npc1.frame = 0
     return new_c
 
 def new_healka():
-    global healka_textures, CoinsGroup
+    global healka_textures, HealkasGroup
     new_h = DroppedItem(rand(10, ORIGSCENEW), rand(10, ORIGSCENEH), healka_textures,
-                        lambda x: (new_healka(), pl1.add_hp(5, rand(1, 5) == 5)), objManager)
+                        lambda x: (new_healka(), pl1.add_hp(5, rand(1, 5) == 5)), objManager, spriteGroup=HealkasGroup)
     #CoinsGroup.add(new_h)
     HealkasGroup.add(new_h)
     return new_h
@@ -134,22 +134,25 @@ healka_textures =[pg.transform.scale(sprite, (48, 48))]
 
 CoinsGroup = pg.sprite.Group()
 HealkasGroup = pg.sprite.Group()
-
-
+LootBoxesGroup = pg.sprite.Group()
 
 sprite = pg.Surface((16, 16), pg.SRCALPHA)
 sprite.blit(pg.image.load(sys.path[0] + f"/res/textures/Barrel16x.png").convert_alpha(), (0, 0), (0, 0, 16, 16))
-box1 = LootBox(400, 300, (pg.transform.scale(sprite, (48, 48)),
-                          pg.image.load(sys.path[0] + f"/res/textures/chests/gray_chest1.png")), new_coin, obj_manager=objManager)
+
 AllEntities.add(pl1)
 AllEntities.add(npc1)
-AllEntities.add(box1)
+for _ in range(5):
+    box0 = LootBox(rand(400, ORIGSCENEW - 200), rand(300, ORIGSCENEH - 200), (pg.transform.scale(sprite, (48, 48)),
+                          pg.image.load(sys.path[0] + f"/res/textures/chests/gray_chest1.png")), new_coin,
+               obj_manager=objManager, spriteGroup=LootBoxesGroup)
+    objManager.add(box0)
+    LootBoxesGroup.add(box0)
 
-objManager.add_many((pl1, npc1, box1))
+objManager.add_many((pl1, npc1))
 
 for _ in range(5):
-    objManager.add(new_healka())
-    objManager.add(new_coin(rand(10, ORIGSCENEW), rand(10, ORIGSCENEH), True))
+    new_healka()
+    new_coin(rand(10, ORIGSCENEW), rand(10, ORIGSCENEH), True)
 
 
 while True:
@@ -191,6 +194,7 @@ while True:
     interact_item(pl1, HealkasGroup, keys)
 
     CoinsGroup.update(dtime=dt / 1000, surf=window_surface)
+    LootBoxesGroup.update(surf=window_surface)
     HealkasGroup.update(dtime=dt / 1000, surf=window_surface)
 
     for entity in sorted(AllEntities, key=lambda obj: obj.rect.bottom):

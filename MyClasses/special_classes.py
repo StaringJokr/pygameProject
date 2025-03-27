@@ -104,7 +104,9 @@ class HitZone(pg.Surface):
 
         for enemy in enemys:
             if pg.sprite.collide_rect(self, enemy):
-                self.obj_manager.log(f"{type(self.owner).__name__}{self.owner.rect} attacked {type(enemy).__name__}{enemy.rect}")
+                #self.obj_manager.log(f"{type(self.owner).__name__}{self.owner.rect} attacked {type(enemy).__name__}{enemy.rect}")
+                for i in self.already_attacked:
+                    print(i)
                 enemy.got_attacked(self.owner, self.damage)
                 self.already_attacked.add(enemy)
                 #enemy.collide(player, keys)

@@ -6,7 +6,7 @@ from settings import *
 
 
 class DroppedItem(pg.sprite.Sprite):
-    def __init__(self, x, y, costumes, func_when_die, obj_manager):
+    def __init__(self, x, y, costumes, func_when_die, obj_manager, spriteGroup):
         pg.sprite.Sprite.__init__(self)
         self.costumes = costumes
         self.image = self.costumes[0]
@@ -17,7 +17,8 @@ class DroppedItem(pg.sprite.Sprite):
         self.anim_time = 1
         self.isOneFrame = len(costumes) == 1
 
-        self.obj_manager = obj_manager
+        self.obj_manager = obj_manager.new_obj(self)
+        self.spriteGroup = spriteGroup
 
         self.interact_zone = InteractiveBox(self, self.rect.center, 50, 50, (pg.K_e, pg.K_q), (pg.K_e,))
         self.interact_widget = None
@@ -46,7 +47,9 @@ class DroppedItem(pg.sprite.Sprite):
 
     def interact(self, player: Player, keys):
         self.func_when_die(self)
-        self.obj_manager.log(f"{Player} interacted with {self}")
+        self.obj_manager.log(f"{type(player).__name__}{player.rect} interacted {type(self).__name__}{self.rect}", False, True)
+        self.obj_manager.remove(self)
+        self.spriteGroup.remove(self)
         self.kill()
 
     def when_player_in_zone(self, player: Player):
@@ -61,7 +64,7 @@ class DroppedItem(pg.sprite.Sprite):
         self.interact_widget = None
 
     def got_attacked(self, source, damage):
-        self.obj_manager.log(f"this bro({source}) rly trying to kill dropped item😂💀")
+        pass
 
 
 class Entity(pg.sprite.Sprite):
@@ -154,7 +157,7 @@ class Entity(pg.sprite.Sprite):
         self.hit_zone = False
 
     def add_hp(self, n: int, canExceedMaxHP=False):
-        if canExceedMaxHP:
+        if canExceedMaxHP or n < 0:
             self.hp += n
         elif self.hp < self.max_hp:
             self.hp = min(self.max_hp, self.hp + n)
@@ -183,7 +186,7 @@ class Storage(pg.sprite.Sprite):
 
 
 class LootBox(pg.sprite.Sprite):
-    def __init__(self, x, y, costumes, func_when_die, obj_manager):
+    def __init__(self, x, y, costumes, new_loot_func, obj_manager, spriteGroup):
         pg.sprite.Sprite.__init__(self)
         self.costumes = costumes
         self.costumeNumber = 0
@@ -192,10 +195,11 @@ class LootBox(pg.sprite.Sprite):
         self.rect.center = (x, y)
 
         self.obj_manager = obj_manager
+        self.spriteGroup = spriteGroup
 
-        self.func_when_die = func_when_die
+        self.new_loot_func = new_loot_func
 
-    def update_object(self, **kwargs):
+    def update(self, **kwargs):
         self.image = self.costumes[int(self.costumeNumber)]
         self.draw(kwargs["surf"])
 
@@ -209,15 +213,14 @@ class LootBox(pg.sprite.Sprite):
         self.obj_manager.log(f"{type(source).__name__}{source.rect} looted LootBox{self.rect}")
         self.costumeNumber = 0
         self.summon_loot(damage)
+        self.spriteGroup.remove(self)
+        self.obj_manager.remove(self)
         self.kill()
 
     def summon_loot(self, luck):
         #global coin_textures, CoinsGroup, objManager, pl1, new_coin
-        print(int(luck // 2 ), int(luck // 1.2))
         for _ in range(0, rand(int(luck // 2 ), int(luck // 1.2)), 2):
             #new_c = DroppedIte(rand(self.rect.left, self.rect.right), rand(self.rect.top, self.rect.bottom), coin_textures,
             #                    lambda x: (new_coin(), pl1.add_money(1)), objManager)
             #CoinsGroup.add(new_c)
-            self.func_when_die(rand(self.rect.left, self.rect.right), rand(self.rect.top, self.rect.bottom))
-
-
+            self.new_loot_func(rand(self.rect.left, self.rect.right), rand(self.rect.top, self.rect.bottom))
