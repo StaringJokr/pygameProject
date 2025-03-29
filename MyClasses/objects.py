@@ -6,7 +6,7 @@ from settings import *
 
 
 class DroppedItem(pg.sprite.Sprite):
-    def __init__(self, x, y, costumes, func_when_die, obj_manager):
+    def __init__(self, x, y, costumes, func_when_die, obj_manager, spriteGroup, inf):
         pg.sprite.Sprite.__init__(self)
         self.costumes = costumes
         self.image = self.costumes[0]
@@ -17,11 +17,14 @@ class DroppedItem(pg.sprite.Sprite):
         self.anim_time = 1
         self.isOneFrame = len(costumes) == 1
 
-        self.obj_manager = obj_manager
+        self.obj_manager = obj_manager.new_obj(self)
+        self.spriteGroup = spriteGroup
+        spriteGroup.add(self)
 
         self.interact_zone = InteractiveBox(self, self.rect.center, 50, 50, (pg.K_e, pg.K_q), (pg.K_e,))
         self.interact_widget = None
         self.func_when_die = func_when_die
+        self.inf = inf
 
     def update(self, **kwargs):
         if not self.isOneFrame:
@@ -46,8 +49,12 @@ class DroppedItem(pg.sprite.Sprite):
 
     def interact(self, player: Player, keys):
         self.func_when_die(self)
-        self.obj_manager.log(f"{Player} interacted with {self}")
-        self.kill()
+        self.obj_manager.log(f"{type(player).__name__}{player.rect} interacted {type(self).__name__}{self.rect}",
+                             False, True)
+        if not self.inf:
+            self.obj_manager.remove(self)
+            self.spriteGroup.remove(self)
+            self.kill()
 
     def when_player_in_zone(self, player: Player):
         if self.interact_widget:
@@ -61,41 +68,41 @@ class DroppedItem(pg.sprite.Sprite):
         self.interact_widget = None
 
     def got_attacked(self, source, damage):
-        self.obj_manager.log(f"this bro({source}) rly trying to kill dropped item😂💀")
+        pass
 
 
 class Entity(pg.sprite.Sprite):
-    def __init__(self, start_pos: tuple, speed: int, max_hp, hp,  animations, obj_manager):
+    def __init__(self, start_pos: tuple, properties: dict, action, animation, frame, fd, dire_r, animations, obj_manager, spriteGroup):
         pg.sprite.Sprite.__init__(self)
 
-        self.obj_manager = obj_manager
+        self.obj_manager = obj_manager.new_obj(self)
+        self.spriteGroup = spriteGroup
+        spriteGroup.add(self)
 
         self.action_to_animation = {"Nothing": "Idle",
                                     "Walk": "Walk",
                                     "Run": "Walk",
                                     "Attack": "Attack"}
-        self.action = "Nothing"
-        self.animation = self.action_to_animation[self.action]
+        self.action = action
+        self.animation = animation
         self.animations = animations
 
-        self.frame = 0
-        self.frame_delay = 0.2
+        self.frame = frame
+        self.frame_delay = fd
 
-        self.sprite = self.animations[self.action_to_animation[self.action]][self.frame]
+        self.sprite = self.animations[self.action_to_animation[self.action]][int(self.frame / self.frame_delay)]
         self.mask = pg.mask.from_surface(self.sprite)
         self.rect = self.sprite.get_rect()
         self.rect.center = start_pos
 
-        self.speed = speed
+        self.speed = properties.get("speed", 400)
+        self.max_hp = properties.get("max_hp", 200)
+        self.hp = properties.get("hp", self.max_hp)
+        self.money = properties.get("money", 0)
 
-        self.max_hp = max_hp
-        self.hp = hp
+        self.health_bar = ProgressBar(self, (0, -10), (100, 15), int(self.hp / self.max_hp * 100), RED, GREEN)
 
-        self.health_bar = ProgressBar(self, (0, -10), (100, 15), int(hp / max_hp * 100), RED, GREEN)
-
-        self.money = 0
-
-        self.direction_r = True
+        self.direction_r = dire_r
 
         self.hit_zone = False
 
@@ -154,7 +161,7 @@ class Entity(pg.sprite.Sprite):
         self.hit_zone = False
 
     def add_hp(self, n: int, canExceedMaxHP=False):
-        if canExceedMaxHP:
+        if canExceedMaxHP or n < 0:
             self.hp += n
         elif self.hp < self.max_hp:
             self.hp = min(self.max_hp, self.hp + n)
@@ -183,7 +190,7 @@ class Storage(pg.sprite.Sprite):
 
 
 class LootBox(pg.sprite.Sprite):
-    def __init__(self, x, y, costumes, func_when_die, obj_manager):
+    def __init__(self, x, y, costumes, new_loot_func, obj_manager, spriteGroup, inf=False):
         pg.sprite.Sprite.__init__(self)
         self.costumes = costumes
         self.costumeNumber = 0
@@ -192,10 +199,13 @@ class LootBox(pg.sprite.Sprite):
         self.rect.center = (x, y)
 
         self.obj_manager = obj_manager
+        obj_manager.add(self)
+        self.spriteGroup = spriteGroup
+        spriteGroup.add(self)
+        self.inf = inf
+        self.new_loot_func = new_loot_func
 
-        self.func_when_die = func_when_die
-
-    def update_object(self, **kwargs):
+    def update(self, **kwargs):
         self.image = self.costumes[int(self.costumeNumber)]
         self.draw(kwargs["surf"])
 
@@ -209,15 +219,15 @@ class LootBox(pg.sprite.Sprite):
         self.obj_manager.log(f"{type(source).__name__}{source.rect} looted LootBox{self.rect}")
         self.costumeNumber = 0
         self.summon_loot(damage)
-        self.kill()
+        if not self.inf:
+            self.spriteGroup.remove(self)
+            self.obj_manager.remove(self)
+            self.kill()
 
     def summon_loot(self, luck):
         #global coin_textures, CoinsGroup, objManager, pl1, new_coin
-        print(int(luck // 2 ), int(luck // 1.2))
         for _ in range(0, rand(int(luck // 2 ), int(luck // 1.2)), 2):
             #new_c = DroppedIte(rand(self.rect.left, self.rect.right), rand(self.rect.top, self.rect.bottom), coin_textures,
             #                    lambda x: (new_coin(), pl1.add_money(1)), objManager)
             #CoinsGroup.add(new_c)
-            self.func_when_die(rand(self.rect.left, self.rect.right), rand(self.rect.top, self.rect.bottom))
-
-
+            self.new_loot_func(rand(self.rect.left, self.rect.right), rand(self.rect.top, self.rect.bottom))

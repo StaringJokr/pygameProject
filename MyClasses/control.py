@@ -1,4 +1,7 @@
 import pygame as pg
+from json import load as json_load
+from json import dump as json_dump
+from tkinter import filedialog
 from settings import *
 
 class ObjectManager:
@@ -32,8 +35,12 @@ class ObjectManager:
         if saveToFile:  self.logs.append(str(round(pg.time.get_ticks() / 1000, 3)) + " " + message + "\n")
 
     def stop_game(self):
-        with open(self.logfile_name, "w") as file:
+        with open(self.logfile_name, "w", encoding="utf-8") as file:
             file.writelines(self.logs)
+
+    def new_obj(self, obj):
+        self.add(obj)
+        return self
 
 
 class Info(pg.Surface):
@@ -84,3 +91,122 @@ class Info(pg.Surface):
 
     def get_info(self):
         return {"Swaga": "prisutsvuet"}
+
+
+class SaveManager:
+    def __init__(self):
+        pass
+
+    def load(self, file_path=False):
+        if not file_path:
+            file_path = filedialog.askopenfile(filetypes=[('JSON Files', '*.json'), ('All Files', '*.*')])
+        if not file_path: exit()
+
+        self.data = json_load(file_path)
+
+    def save(self, player, c_group, h_group, lb_group, e_group, file_path="save0.json"):
+        if not file_path:
+            file_path = filedialog.asksaveasfilename(filetypes=[('JSON Files', '*.json'), ('All Files', '*.*')])
+            if not file_path:
+                return
+            if file_path[len(file_path)-5:] != ".json":
+                file_path += ".json"
+
+
+        data = {
+                "player": {},
+                "CoinsGroup": {},
+                "HealkasGroup": {},
+                "LootBoxesGroup": {},
+                "EntityGroup": {}
+                }
+        pldat = dict()
+        pldat["pos"] = {"x": player.rect.x, "y": player.rect.y}
+        pldat["action"] = player.action
+        pldat["animation"] = player.animation
+        pldat["frame"] = player.frame
+        pldat["frame_delay"] = player.frame_delay
+        pldat["direction_r"] = player.direction_r
+        pldat["properties"] = {"speed": player.speed,
+                               "max_hp": player.max_hp,
+                               "hp": player.hp,
+                               "money": player.money,
+                               "max_stamina": player.max_stamina,
+                               "stamina": player.stamina,
+                               "run_boost": player.run_boost,
+                               "restamina_per_second": player.restamina_per_second
+                                }
+        pldat["isHitzone"] = False
+        #if player.hit_zone:
+         #   pldat["isHitzone"] = True
+        data["player"] = pldat
+
+        cgroup = {"x": [], "y": [], "inf": []}
+        for c in c_group:
+            cgroup["x"].append(c.rect.centerx)
+            cgroup["y"].append(c.rect.centery)
+            cgroup["inf"].append(c.inf)
+        data["CoinsGroup"] = cgroup
+
+        hgroup = {"x": [], "y": [], "inf": []}
+        for h in h_group:
+            hgroup["x"].append(h.rect.centerx)
+            hgroup["y"].append(h.rect.centery)
+            hgroup["inf"].append(h.inf)
+        data["HealkasGroup"] = hgroup
+
+        lbgroup = {"x": [], "y": [], "inf": []}
+        for lb in lb_group:
+            lbgroup["x"].append(lb.rect.centerx)
+            lbgroup["y"].append(lb.rect.centery)
+            lbgroup["inf"].append(lb.inf)
+        data["LootBoxesGroup"] = lbgroup
+
+        egroup = []
+        for en in e_group:
+            edat = dict()
+            edat["pos"] = {"x": en.rect.centerx, "y": en.rect.centery}
+            edat["action"] = en.action
+            edat["animation"] = en.animation
+            edat["frame"] = en.frame
+            edat["frame_delay"] = en.frame_delay
+            edat["direction_r"] = en.direction_r
+            edat["money"] = en.money
+            edat["properties"] = {"speed": en.speed,
+                                   "max_hp": en.max_hp,
+                                   "hp": en.hp,
+                                  }
+            egroup.append(edat)
+            data["EntityGroup"] = egroup
+
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json_dump(data, f, ensure_ascii=False, indent=4)
+
+    def player(self, class_name, textures, obj_manager):
+        pl_data = self.data["player"]
+        pos = pl_data["pos"]
+        return class_name((pos["x"], pos["y"]), pl_data["properties"], pl_data["action"], pl_data["animation"],
+                          pl_data["frame"], pl_data["frame_delay"], pl_data["direction_r"], textures, obj_manager)
+
+    def drops(self, summon_func, drop_type):
+        if drop_type == "coin":
+            c_data = self.data["CoinsGroup"]
+        elif drop_type == "healka":
+            c_data = self.data["HealkasGroup"]
+
+        for i in range(len(c_data.get("x", []))):
+            summon_func(c_data["x"][i], c_data["y"][i], c_data["inf"][i])
+
+    def loot_boxes(self, class_summon, costumes, summon_loot_func, obj_manager, group):
+        l_data = self.data["LootBoxesGroup"]
+
+        for i in range(len(l_data.get("x", []))):
+            class_summon(l_data["x"][i], l_data["y"][i], costumes, summon_loot_func, obj_manager, group, l_data["inf"][i])
+
+    def entities(self, class_summon, costumes, obj_manager, group):
+        e_data = self.data["EntityGroup"]
+
+        for en in e_data:
+            class_summon((en["pos"]["x"], en["pos"]["y"]), en["properties"],
+                         en["action"], en["animation"], en["frame"], en["frame_delay"],
+                         en["direction_r"], costumes, obj_manager, group)
