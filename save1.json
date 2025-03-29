@@ -1,43 +1,85 @@
 {
-  "player":
-    {
-      "pos":
-      {
-        "x": 300,
-        "y": 300
-      },
-      "action" : "Nothing",
-      "animation": "<Idle",
-      "frame": 0,
-      "direction_r": true,
-      "properties":
-      {
-        "speed": 400,
-        "max_hp": 100,
-        "hp": 75,
-        "money": 4,
-        "max_stamina": 30.0,
-        "stamina": 15.0,
-        "run_boost": 1.6,
-        "restamina_per_second": 8
-      },
-      "isHitzone": false
+    "player": {
+        "pos": {
+            "x": 841,
+            "y": 782
+        },
+        "action": "Nothing",
+        "animation": "Idle",
+        "frame": 1.5289999999999966,
+        "frame_delay": 0.2,
+        "direction_r": false,
+        "properties": {
+            "speed": 400,
+            "max_hp": 100,
+            "hp": 75,
+            "money": 4,
+            "max_stamina": 30.0,
+            "stamina": 26.3760000000001,
+            "run_boost": 1.6,
+            "restamina_per_second": 8
+        },
+        "isHitzone": false
     },
-  "CoinsGroup":
-  {
-    "x": [20, 50],
-    "y": [40, 70],
-    "inf": [true, false]
-  },
-  "HealkasGroup":
-  {
-    "x": [200, 50],
-    "y": [400, 70],
-    "inf": [true, false]
-  },
-  "LootBoxesGroup":
-  {
-    "x": [500, 504],
-    "y": [530, 200]
-  }
+    "CoinsGroup": {
+        "x": [
+            20,
+            50
+        ],
+        "y": [
+            40,
+            70
+        ],
+        "inf": [
+            true,
+            false
+        ]
+    },
+    "HealkasGroup": {
+        "x": [
+            200,
+            50
+        ],
+        "y": [
+            400,
+            70
+        ],
+        "inf": [
+            true,
+            false
+        ]
+    },
+    "LootBoxesGroup": {
+        "x": [
+            500,
+            504
+        ],
+        "y": [
+            530,
+            200
+        ],
+        "inf": [
+            false,
+            true
+        ]
+    },
+    "EntityGroup": [
+        {
+            "pos": {
+                "x": 68,
+                "y": 225
+            },
+            "action": "Nothing",
+            "animation": "Idle",
+            "frame": 1.237999999999999,
+            "frame_delay": 0.2,
+            "direction_r": true,
+            "money": 0,
+            "properties": {
+                "speed": 400,
+                "max_hp": 200,
+                "hp": 120
+            }
+        }
+    ]
 }

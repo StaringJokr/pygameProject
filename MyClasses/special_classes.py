@@ -49,13 +49,6 @@ class ProgressBar(pg.Surface):
                  outline_c=False, outline_fatness=1):
         pg.Surface.__init__(self, (wh[0], wh[1]))
 
-        pg.draw.rect(self, bg_color, (0, 0, wh[0], wh[1]))
-
-        pg.draw.rect(self, main_color, (0, 0, int(wh[0] * percent / 100), wh[1]))
-
-        if outline_c:
-            pg.draw.rect(self, outline_c, (0, 0, wh[0], wh[1]), outline_fatness)
-
         self.owner = owner
         self.dx, self.dy = dxdy
         self.width, self.height = wh
@@ -64,6 +57,7 @@ class ProgressBar(pg.Surface):
         self.main_color = main_color
         self.outline_c = outline_c
         self.outline_fatness = outline_fatness
+        self.update(percent)
 
     def update(self, percent):
         self.percent = percent
@@ -105,11 +99,18 @@ class HitZone(pg.Surface):
         for enemy in enemys:
             if pg.sprite.collide_rect(self, enemy):
                 #self.obj_manager.log(f"{type(self.owner).__name__}{self.owner.rect} attacked {type(enemy).__name__}{enemy.rect}")
-                for i in self.already_attacked:
-                    print(i)
                 enemy.got_attacked(self.owner, self.damage)
                 self.already_attacked.add(enemy)
                 #enemy.collide(player, keys)
             #else:
                 #zone.no_collide(player)
 
+"""class HitBox(pg.rect.Rect):
+    def __init__(self, owner, center, wh):
+        lefttop = (center[0] - wh[0], center[1] + wh[1])
+        pg.rect.Rect.__init__(self, lefttop[0], lefttop[1], wh[0], wh[1])
+
+        self.owner = owner
+
+    def set_center(self, xy):
+        self.center = xy"""

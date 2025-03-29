@@ -99,28 +99,33 @@ class SaveManager:
 
     def load(self, file_path=False):
         if not file_path:
-            file_path = filedialog.askopenfile()
+            file_path = filedialog.askopenfile(filetypes=[('JSON Files', '*.json'), ('All Files', '*.*')])
         if not file_path: exit()
 
         self.data = json_load(file_path)
 
-    def save(self, player, c_group, h_group, file_path="save0.json"):
+    def save(self, player, c_group, h_group, lb_group, e_group, file_path="save0.json"):
         if not file_path:
-            file_path = filedialog.askopenfilename()
+            file_path = filedialog.asksaveasfilename(filetypes=[('JSON Files', '*.json'), ('All Files', '*.*')])
             if not file_path:
                 return
+            if file_path[len(file_path)-5:] != ".json":
+                file_path += ".json"
+
 
         data = {
                 "player": {},
                 "CoinsGroup": {},
                 "HealkasGroup": {},
-                "LootBoxesGroup": {}
+                "LootBoxesGroup": {},
+                "EntityGroup": {}
                 }
         pldat = dict()
         pldat["pos"] = {"x": player.rect.x, "y": player.rect.y}
         pldat["action"] = player.action
         pldat["animation"] = player.animation
         pldat["frame"] = player.frame
+        pldat["frame_delay"] = player.frame_delay
         pldat["direction_r"] = player.direction_r
         pldat["properties"] = {"speed": player.speed,
                                "max_hp": player.max_hp,
@@ -138,17 +143,41 @@ class SaveManager:
 
         cgroup = {"x": [], "y": [], "inf": []}
         for c in c_group:
-            cgroup["x"].append(c.rect.x)
-            cgroup["y"].append(c.rect.y)
+            cgroup["x"].append(c.rect.centerx)
+            cgroup["y"].append(c.rect.centery)
             cgroup["inf"].append(c.inf)
         data["CoinsGroup"] = cgroup
 
         hgroup = {"x": [], "y": [], "inf": []}
         for h in h_group:
-            hgroup["x"].append(h.rect.x)
-            hgroup["y"].append(h.rect.y)
+            hgroup["x"].append(h.rect.centerx)
+            hgroup["y"].append(h.rect.centery)
             hgroup["inf"].append(h.inf)
         data["HealkasGroup"] = hgroup
+
+        lbgroup = {"x": [], "y": [], "inf": []}
+        for lb in lb_group:
+            lbgroup["x"].append(lb.rect.centerx)
+            lbgroup["y"].append(lb.rect.centery)
+            lbgroup["inf"].append(lb.inf)
+        data["LootBoxesGroup"] = lbgroup
+
+        egroup = []
+        for en in e_group:
+            edat = dict()
+            edat["pos"] = {"x": en.rect.centerx, "y": en.rect.centery}
+            edat["action"] = en.action
+            edat["animation"] = en.animation
+            edat["frame"] = en.frame
+            edat["frame_delay"] = en.frame_delay
+            edat["direction_r"] = en.direction_r
+            edat["money"] = en.money
+            edat["properties"] = {"speed": en.speed,
+                                   "max_hp": en.max_hp,
+                                   "hp": en.hp,
+                                  }
+            egroup.append(edat)
+            data["EntityGroup"] = egroup
 
         with open(file_path, 'w', encoding='utf-8') as f:
             json_dump(data, f, ensure_ascii=False, indent=4)
@@ -156,9 +185,8 @@ class SaveManager:
     def player(self, class_name, textures, obj_manager):
         pl_data = self.data["player"]
         pos = pl_data["pos"]
-        prop = pl_data["properties"]
-        return class_name((pos["x"], pos["y"]), prop["speed"],
-                          prop["max_hp"], prop["hp"], prop["money"], textures, obj_manager)
+        return class_name((pos["x"], pos["y"]), pl_data["properties"], pl_data["action"], pl_data["animation"],
+                          pl_data["frame"], pl_data["frame_delay"], pl_data["direction_r"], textures, obj_manager)
 
     def drops(self, summon_func, drop_type):
         if drop_type == "coin":
@@ -173,4 +201,12 @@ class SaveManager:
         l_data = self.data["LootBoxesGroup"]
 
         for i in range(len(l_data.get("x", []))):
-            class_summon(l_data["x"][i], l_data["y"][i], costumes, summon_loot_func, obj_manager, group)
+            class_summon(l_data["x"][i], l_data["y"][i], costumes, summon_loot_func, obj_manager, group, l_data["inf"][i])
+
+    def entities(self, class_summon, costumes, obj_manager, group):
+        e_data = self.data["EntityGroup"]
+
+        for en in e_data:
+            class_summon((en["pos"]["x"], en["pos"]["y"]), en["properties"],
+                         en["action"], en["animation"], en["frame"], en["frame_delay"],
+                         en["direction_r"], costumes, obj_manager, group)

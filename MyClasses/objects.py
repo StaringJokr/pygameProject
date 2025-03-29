@@ -72,37 +72,37 @@ class DroppedItem(pg.sprite.Sprite):
 
 
 class Entity(pg.sprite.Sprite):
-    def __init__(self, start_pos: tuple, speed: int, max_hp, hp,  animations, obj_manager):
+    def __init__(self, start_pos: tuple, properties: dict, action, animation, frame, fd, dire_r, animations, obj_manager, spriteGroup):
         pg.sprite.Sprite.__init__(self)
 
-        self.obj_manager = obj_manager
+        self.obj_manager = obj_manager.new_obj(self)
+        self.spriteGroup = spriteGroup
+        spriteGroup.add(self)
 
         self.action_to_animation = {"Nothing": "Idle",
                                     "Walk": "Walk",
                                     "Run": "Walk",
                                     "Attack": "Attack"}
-        self.action = "Nothing"
-        self.animation = self.action_to_animation[self.action]
+        self.action = action
+        self.animation = animation
         self.animations = animations
 
-        self.frame = 0
-        self.frame_delay = 0.2
+        self.frame = frame
+        self.frame_delay = fd
 
-        self.sprite = self.animations[self.action_to_animation[self.action]][self.frame]
+        self.sprite = self.animations[self.action_to_animation[self.action]][int(self.frame / self.frame_delay)]
         self.mask = pg.mask.from_surface(self.sprite)
         self.rect = self.sprite.get_rect()
         self.rect.center = start_pos
 
-        self.speed = speed
+        self.speed = properties.get("speed", 400)
+        self.max_hp = properties.get("max_hp", 200)
+        self.hp = properties.get("hp", self.max_hp)
+        self.money = properties.get("money", 0)
 
-        self.max_hp = max_hp
-        self.hp = hp
+        self.health_bar = ProgressBar(self, (0, -10), (100, 15), int(self.hp / self.max_hp * 100), RED, GREEN)
 
-        self.health_bar = ProgressBar(self, (0, -10), (100, 15), int(hp / max_hp * 100), RED, GREEN)
-
-        self.money = 0
-
-        self.direction_r = True
+        self.direction_r = dire_r
 
         self.hit_zone = False
 
@@ -190,7 +190,7 @@ class Storage(pg.sprite.Sprite):
 
 
 class LootBox(pg.sprite.Sprite):
-    def __init__(self, x, y, costumes, new_loot_func, obj_manager, spriteGroup):
+    def __init__(self, x, y, costumes, new_loot_func, obj_manager, spriteGroup, inf=False):
         pg.sprite.Sprite.__init__(self)
         self.costumes = costumes
         self.costumeNumber = 0
@@ -202,7 +202,7 @@ class LootBox(pg.sprite.Sprite):
         obj_manager.add(self)
         self.spriteGroup = spriteGroup
         spriteGroup.add(self)
-
+        self.inf = inf
         self.new_loot_func = new_loot_func
 
     def update(self, **kwargs):
@@ -219,9 +219,10 @@ class LootBox(pg.sprite.Sprite):
         self.obj_manager.log(f"{type(source).__name__}{source.rect} looted LootBox{self.rect}")
         self.costumeNumber = 0
         self.summon_loot(damage)
-        self.spriteGroup.remove(self)
-        self.obj_manager.remove(self)
-        self.kill()
+        if not self.inf:
+            self.spriteGroup.remove(self)
+            self.obj_manager.remove(self)
+            self.kill()
 
     def summon_loot(self, luck):
         #global coin_textures, CoinsGroup, objManager, pl1, new_coin

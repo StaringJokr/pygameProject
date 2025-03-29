@@ -10,41 +10,39 @@ class Player(pg.sprite.Sprite):
         speed o_o
         filename  - path to texture of player
     """
-    def __init__(self, start_pos: tuple, speed: int, max_hp: int, hp: int, money: int, animations, obj_manager):
+    def __init__(self, start_pos: tuple, properties: dict, action, animation, frame, fd, dire_r, animations, obj_manager):
         pg.sprite.Sprite.__init__(self)
 
-        self.obj_manager = obj_manager
+        self.obj_manager = obj_manager.new_obj(self)
 
         self.action_to_animation = {"Nothing": "Idle",
                                     "Walk": "Walk",
                                     "Run": "Walk",
                                     "Attack": "Attack"}
-        self.action = "Nothing"
-        self.animation = self.action_to_animation[self.action]
+        self.action = action
+        self.animation = animation
         self.animations = animations
 
-        self.frame = 0
-        self.frame_delay = 0.2
+        self.frame = frame
+        self.frame_delay = fd #0.2
 
-        self.sprite = self.animations[self.action_to_animation[self.action]][self.frame]
+        self.sprite = self.animations[self.action_to_animation[self.action]][int(self.frame / self.frame_delay)]
         self.mask = pg.mask.from_surface(self.sprite)
         self.rect = self.sprite.get_rect()
         self.rect.center = start_pos
 
-        self.speed = speed
-        self.max_stamina = 30.0
-        self.stamina = self.max_stamina
-        self.run_boost = 1.6
-        self.restamina_per_second = 8
+        self.speed = properties.get("speed", 400)
+        self.max_stamina = properties.get("max_stamina", 30.0)
+        self.stamina = properties.get("stamina", self.max_stamina)
+        self.run_boost = properties.get("run_boost", 1.6)
+        self.restamina_per_second = properties.get("restamina_per_second", 8)
+        self.money = properties.get("money", 0)
+        self.max_hp = properties.get("max_hp", 100)
+        self.hp = properties.get("hp", self.max_hp)
 
-        self.max_hp = max_hp
-        self.hp = hp
+        self.health_bar = ProgressBar(self, (0, -10), (100, 15), int(self.hp / self.max_hp * 100), RED, GREEN)
 
-        self.health_bar = ProgressBar(self, (0, -10), (100, 15), int(hp / max_hp * 100), RED, GREEN)
-
-        self.money = money
-
-        self.direction_r = True
+        self.direction_r = dire_r
 
         self.hit_zone = False
 
