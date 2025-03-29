@@ -51,7 +51,7 @@ def interact_item(player, sprite_group, keys):
             zone.no_collide(player)
 
 
-
+mnog = 0.5
 if len(sys.argv) > 1:
     try:
         mnog = min(int(sys.argv[1]) / ORIGSCENEW, int(sys.argv[2]) / ORIGSCENEH)
