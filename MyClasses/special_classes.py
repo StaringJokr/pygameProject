@@ -2,7 +2,7 @@ import pygame as pg
 from settings import *
 
 class InteractiveBox(pg.Surface):
-    def __init__(self, owner, center, width, height, interact_keys: tuple, can_hold: tuple):
+    def __init__(self, owner, center, width, height, interact_keys: tuple, can_hold=()):
         pg.Surface.__init__(self, (width, height))
         self.owner = owner
         self.rect = self.get_rect()
@@ -74,7 +74,7 @@ class ProgressBar(pg.Surface):
             pg.draw.rect(self, self.outline_c, (0, 0, self.width, self.height), self.outline_fatness)
 
 
-    def draw(self, surf: pg.Surface):
+    def draw(self, surf):
         surf.blit(self, (self.owner.rect.center[0] + self.dx - self.width // 2, self.owner.rect.top + self.dy))
 
 class HitZone(pg.Surface):
@@ -117,12 +117,39 @@ def collide_mask_rect(left, right):
     return leftmask.overlap(rightmask, (xoffset, yoffset))
 
 
-"""class HitBox(pg.rect.Rect):
-    def __init__(self, owner, center, wh):
-        lefttop = (center[0] - wh[0], center[1] + wh[1])
-        pg.rect.Rect.__init__(self, lefttop[0], lefttop[1], wh[0], wh[1])
+class InventoryWidget(pg.surface.Surface):
+    def __init__(self, owner, center, storage_list, name, name_size,
+                 cell_size, offset, interval,
+                 name_color=(255, 222, 6), cell_color=(192, 192, 192), bg_color=(30, 30, 30)):
+        self.name = pg.font.SysFont("freesansbold.ttf", name_size).render(name, True, name_color)
+        pg.surface.Surface.__init__(self, (offset * 2 + len(storage_list[0]) * (cell_size + interval) - interval,
+                                           self.name.get_size()[1] + offset * 2 + len(storage_list) * (cell_size + interval) - interval))
+        self.rect = self.get_rect()
+        self.rect.center = center
+        self.columns, self.strokes, = len(storage_list), len(storage_list[0])
 
-        self.owner = owner
+        self.storage = storage_list
 
-    def set_center(self, xy):
-        self.center = xy"""
+        self.cell_size = cell_size
+        self.c_offset = offset
+        self.c_interval = interval
+
+        self.colors = (name_color, cell_color, bg_color)
+
+        self.obj_manager = owner.obj_manager
+
+    def update(self):
+        self.fill(self.colors[2])
+        self.blit(self.name, self.name.get_rect())
+        for yi in range(self.columns):
+            for xi in range(self.strokes):
+                pg.draw.rect(self, self.colors[1], (self.c_offset + (self.cell_size + self.c_interval) * xi,
+                                                    self.name.get_size()[1] + self.c_offset + (self.cell_size + self.c_interval) * yi,
+                                                    self.cell_size, self.cell_size))
+                if self.storage[yi][xi]:
+                    pg.draw.rect(self, (255, 0, 0), (self.c_offset + (self.cell_size + self.c_interval) * xi,
+                                                        self.name.get_size()[1] + self.c_offset + (self.cell_size + self.c_interval) * yi,
+                                                        self.cell_size, self.cell_size))
+
+    def draw(self):
+        self.obj_manager.add_gui(self)

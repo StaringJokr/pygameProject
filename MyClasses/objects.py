@@ -1,5 +1,5 @@
 import pygame as pg
-from MyClasses.special_classes import InteractiveBox, InteractiveWidget, ProgressBar, HitZone
+from MyClasses.special_classes import InteractiveBox, InteractiveWidget, ProgressBar, HitZone, InventoryWidget
 from MyClasses.player import Player
 from random import randint as rand
 from settings import *
@@ -184,9 +184,72 @@ class Entity(pg.sprite.Sprite):
         self.obj_manager.log(f"RIP {self}")
 
 
-class Storage(pg.sprite.Sprite):
-    pass
+class Chest(pg.sprite.Sprite):
+    def __init__(self, x, y, inv_capacity, inv_columns, costumes, obj_manager, spriteGroup):
+        pg.sprite.Sprite.__init__(self)
+        self.costumes = costumes
+        self.image = self.costumes[0]
+        self.rect = self.image.get_rect()
+        self.rect.center = (x, y)
 
+        self.costumeNumber = 0.0
+        self.anim_time = 1
+        self.isOneFrame = len(costumes) == 1
+
+        self.obj_manager = obj_manager.new_obj(self)
+        self.spriteGroup = spriteGroup
+        spriteGroup.add(self)
+
+        self.interact_zone = InteractiveBox(self, self.rect.center, 50, 50, (pg.K_e, ))
+        self.interact_widget = None
+
+        self.capacity = inv_capacity
+        self.columns = inv_columns
+        self.storage = []
+        for _ in range(inv_capacity // inv_columns):
+            self.storage.append([-1] * inv_columns)
+        if inv_capacity % inv_columns:
+            self.storage.append([-1] * (inv_capacity % inv_columns) + [False] * (inv_columns - inv_capacity % inv_columns))
+
+        self.inventory_widget = InventoryWidget(self, (self.rect.centerx, self.rect.top - 50), self.storage, "Sigma", 30, 30, 5, 2)
+        self.inventory_widget.update()
+        self.showInv = False
+
+    def update(self, **kwargs):
+        self.image = self.costumes[int(self.costumeNumber)]
+        self.draw(kwargs["surf"])
+
+    def draw(self, surf):
+        surf.blit(self.image, self.rect)
+        if self.showInv:
+            self.inventory_widget.draw()
+        if self.interact_widget:
+            surf.blit(self.interact_widget, self.interact_widget.rect)
+
+    def get_info(self):
+        return {"Center": self.rect.center, "Frame": int(self.costumeNumber) % (len(self.costumes)), "Storage": self.storage}
+
+    def get_interzone(self):
+        return self.interact_zone
+
+    def interact(self, player: Player, keys):
+        self.obj_manager.log(f"{type(player).__name__}{player.rect} interacted {type(self).__name__}{self.rect}",
+                             False, True)
+        self.showInv = not self.showInv
+        self.costumeNumber = (self.costumeNumber + 1) % 2
+
+    def when_player_in_zone(self, player: Player):
+        if self.interact_widget:
+            pass
+        else:
+            self.interact_widget = InteractiveWidget(self.rect.center, 100, 40)
+
+    def when_player_leave_zone(self, player):
+        self.interact_widget = None
+        self.showInv = False
+
+    def got_attacked(self, source, damage):
+        pass
 
 class LootBox(pg.sprite.Sprite):
     def __init__(self, x, y, costumes, new_loot_func, obj_manager, spriteGroup, inf=False):

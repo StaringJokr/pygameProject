@@ -7,7 +7,7 @@ import sys
 import pygame as pg
 import MyClasses.control as mc_control
 import MyClasses.player as mc_player
-from MyClasses.objects import DroppedItem, Entity, LootBox, Storage
+from MyClasses.objects import DroppedItem, Entity, LootBox, Chest
 
 from random import randint as rand
 
@@ -29,6 +29,14 @@ def choose_obj():
     mpos = (mpos[0] / mnog, mpos[1] / mnog)
     print(mpos, pl1.rect.center)
     for obj in CoinsGroup:
+        if obj.rect.collidepoint(mpos):
+            print(obj)
+            gugugaga.set_current(obj)
+    for obj in HealkasGroup:
+        if obj.rect.collidepoint(mpos):
+            print(obj)
+            gugugaga.set_current(obj)
+    for obj in LootBoxesGroup:
         if obj.rect.collidepoint(mpos):
             print(obj)
             gugugaga.set_current(obj)
@@ -122,6 +130,10 @@ sprite.blit(pg.image.load(sys.path[0] + f"/res/textures/Potion.png").convert_alp
 
 healka_textures =[pg.transform.scale(sprite, (48, 48))]
 
+
+sprite = pg.Surface((16, 16), pg.SRCALPHA)
+sprite.blit(pg.image.load(sys.path[0] + f"/res/textures/Barrel16x.png").convert_alpha(), (0, 0), (0, 0, 16, 16))
+
 CoinsGroup = pg.sprite.Group()
 HealkasGroup = pg.sprite.Group()
 LootBoxesGroup = pg.sprite.Group()
@@ -129,9 +141,6 @@ EntitiesGroup = pg.sprite.Group()
 
 #npc1 = Entity((32, 280), 400, 200, 120, 5, planims, obj_manager=objManager, spriteGroup=EntityGroup)
 #EntityGroup.add(npc1)
-
-sprite = pg.Surface((16, 16), pg.SRCALPHA)
-sprite.blit(pg.image.load(sys.path[0] + f"/res/textures/Barrel16x.png").convert_alpha(), (0, 0), (0, 0, 16, 16))
 
 saver.drops(new_coin, drop_type="coin")
 saver.drops(new_healka, drop_type="healka")
@@ -143,6 +152,15 @@ saver.entities(Entity, planims, objManager, EntitiesGroup)
 AllEntities = set()
 AllEntities.add(pl1)
 AllEntities.update(EntitiesGroup)
+
+
+sprite = pg.Surface((21, 23), pg.SRCALPHA)
+sprite.blit(pg.image.load(sys.path[0] + f"/res/textures/chests/gray_chest.png").convert_alpha(), (0, 0), (0, 0, 21, 23))
+chest_textures = [pg.transform.scale(sprite, (42, 46))]
+sprite = pg.Surface((21, 23), pg.SRCALPHA)
+sprite.blit(pg.image.load(sys.path[0] + f"/res/textures/chests/gray_chest1.png").convert_alpha(), (0, 0), (0, 0, 21, 23))
+chest_textures.append(pg.transform.scale(sprite, (42, 46)))
+chest1 = Chest(300, 500, 10, 4, chest_textures, objManager, HealkasGroup)
 
 while True:
     dt = clock.tick(FPS)
@@ -195,7 +213,7 @@ while True:
         gugugaga.update_info()
         window_surface.blit(gugugaga, (ORIGSCENEW - 250, ORIGSCENEH // 2 - 380))
 
-    window_surface.blit(sprite, sprite.get_rect())
+    objManager.blit_guis(window_surface)
 
     frame = pg.transform.scale(window_surface, (WIDTH, HEIGHT))
     real_window.blit(frame, frame.get_rect())

@@ -11,6 +11,7 @@ class ObjectManager:
         self.len = 0
         self.logfile_name = logfile_name
         self.logs = []
+        self.gui_surfs = set()
 
     def get_all(self):
         return self.all_objects
@@ -42,6 +43,13 @@ class ObjectManager:
         self.add(obj)
         return self
 
+    def add_gui(self, surf):
+        self.gui_surfs.add(surf)
+
+    def blit_guis(self, surf):
+        for gui in self.gui_surfs:
+            surf.blit(gui, gui.rect)
+        self.gui_surfs = set()
 
 class Info(pg.Surface):
     """
