@@ -122,13 +122,12 @@ class Entity(pg.sprite.Sprite):
 
     def draw(self, surf: pg.surface.Surface):
         if self.direction_r:
-            pg.draw.rect(self.sprite, (255, 0, 0), (0, 0, self.rect.right - self.rect.left, self.rect.bottom - self.rect.top), 2)
             surf.blit(self.sprite, self.rect)
         else:
             surf.blit(pg.transform.flip(self.sprite.convert_alpha(), True, False), self.rect)
         self.health_bar.draw(surf)
         if self.hit_zone:
-            surf.blit(self.hit_zone, self.hit_zone.rect_for_pl)
+            surf.blit(self.hit_zone, self.hit_zone.rect)
 
     def animate(self, dt):
         if self.action == "Attack":

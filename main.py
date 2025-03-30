@@ -5,7 +5,6 @@ import MyClasses.player
 from settings import *
 import sys
 import pygame as pg
-from random import randint as rand
 import MyClasses.control as mc_control
 import MyClasses.player as mc_player
 from MyClasses.objects import DroppedItem, Entity, LootBox, Storage

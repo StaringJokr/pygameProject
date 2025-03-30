@@ -81,8 +81,8 @@ class HitZone(pg.Surface):
     def __init__(self, owner, pos, wh, damage, obj_manager):
         width, height = wh
         pg.Surface.__init__(self, (width, height))
-        self.rect_for_pl = self.get_rect()
-        self.rect_for_pl.topleft = pos
+        self.rect = self.get_rect()
+        self.rect.topleft = pos
 
         self.damage = damage
 
@@ -94,16 +94,28 @@ class HitZone(pg.Surface):
 
     def check_collide(self):
         enemys = set(self.obj_manager.get_all()) - set((self.owner, )) - self.already_attacked
-        self.rect = self.get_rect(topleft=(self.rect_for_pl[0], self.rect_for_pl[1]))
+        #self.rect = self.get_rect(topleft=(self.rect_for_pl[0], self.rect_for_pl[1]))
 
         for enemy in enemys:
-            if pg.sprite.collide_rect(self, enemy):
+            if pg.sprite.spritecollide(self, [enemy], False, collide_mask_rect):
                 #self.obj_manager.log(f"{type(self.owner).__name__}{self.owner.rect} attacked {type(enemy).__name__}{enemy.rect}")
                 enemy.got_attacked(self.owner, self.damage)
                 self.already_attacked.add(enemy)
-                #enemy.collide(player, keys)
-            #else:
-                #zone.no_collide(player)
+
+
+def collide_mask_rect(left, right):
+    xoffset = right.rect[0] - left.rect[0]
+    yoffset = right.rect[1] - left.rect[1]
+    try:
+        leftmask = left.mask
+    except AttributeError:
+        leftmask = pg.mask.Mask(left.rect.size, True)
+    try:
+        rightmask = right.mask
+    except AttributeError:
+        rightmask = pg.mask.Mask(right.rect.size, True)
+    return leftmask.overlap(rightmask, (xoffset, yoffset))
+
 
 """class HitBox(pg.rect.Rect):
     def __init__(self, owner, center, wh):

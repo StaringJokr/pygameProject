@@ -69,7 +69,7 @@ class Player(pg.sprite.Sprite):
             surf.blit(pg.transform.flip(self.sprite.convert_alpha(), True, False), self.rect)
         self.health_bar.draw(surf)
         if self.hit_zone:
-            surf.blit(self.hit_zone, self.hit_zone.rect_for_pl)
+            surf.blit(self.hit_zone, self.hit_zone.rect)
 
     def animate(self, dt):
         if self.action == "Attack":
