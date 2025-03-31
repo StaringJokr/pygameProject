@@ -21,7 +21,7 @@ class DroppedItem(pg.sprite.Sprite):
         self.spriteGroup = spriteGroup
         spriteGroup.add(self)
 
-        self.interact_zone = InteractiveBox(self, self.rect.center, 50, 50, (pg.K_e, pg.K_q), (pg.K_e,))
+        self.interact_zone = InteractiveBox(self, self.rect.center, 50, 50, (pg.K_e, ))
         self.interact_widget = None
         self.func_when_die = func_when_die
         self.inf = inf
@@ -126,8 +126,6 @@ class Entity(pg.sprite.Sprite):
         else:
             surf.blit(pg.transform.flip(self.sprite.convert_alpha(), True, False), self.rect)
         self.health_bar.draw(surf)
-        if self.hit_zone:
-            surf.blit(self.hit_zone, self.hit_zone.rect)
 
     def animate(self, dt):
         if self.action == "Attack":
@@ -154,7 +152,6 @@ class Entity(pg.sprite.Sprite):
                 self.hit_zone = HitZone(self, (self.rect.centerx, self.rect.top), (94, 110), 5, self.obj_manager)
             else:
                 self.hit_zone = HitZone(self, (self.rect.centerx - 94, self.rect.top), (94, 110), 5, self.obj_manager)
-            self.hit_zone.fill((250, 100, 100))
 
     def stop_attacking(self):
         self.hit_zone = False
@@ -211,7 +208,7 @@ class Chest(pg.sprite.Sprite):
         if inv_capacity % inv_columns:
             self.storage.append([-1] * (inv_capacity % inv_columns) + [False] * (inv_columns - inv_capacity % inv_columns))
 
-        self.inventory_widget = InventoryWidget(self, (self.rect.centerx, self.rect.top - 50), self.storage, "Sigma", 30, 30, 5, 2)
+        self.inventory_widget = InventoryWidget(self, (self.rect.centerx, self.rect.top - 50), self.storage, "Chest w(ﾟДﾟ)w   s", 30, 30, 5, 2)
         self.inventory_widget.update()
         self.showInv = False
 
@@ -247,6 +244,7 @@ class Chest(pg.sprite.Sprite):
     def when_player_leave_zone(self, player):
         self.interact_widget = None
         self.showInv = False
+        self.costumeNumber = 0
 
     def got_attacked(self, source, damage):
         pass
